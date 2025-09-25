@@ -102,6 +102,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    ux_system_tasks_run();
+    ux_host_stack_tasks_run();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
