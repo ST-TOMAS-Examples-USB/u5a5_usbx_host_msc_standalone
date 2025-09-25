@@ -13,7 +13,10 @@
 #include "fx_stm32_custom_driver.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "app_usbx_host.h"
+#include "ux_api.h"
+#include "ux_host_class_storage.h"
+#include "fx_api.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,12 +36,19 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+// - ux_host_class_storage_media_get : get instance of UX_HOST_CLASS_STORAGE_MEDIA
+// - ux_host_class_storage_media_lock : lock specific media for further read/write
+// - ux_host_class_storage_media_read : read sectors on locked media
+// - ux_host_class_storage_media_write : write sectors on locked media
+// - ux_host_class_storage_media_unlock : unlock media
 
+// extern UX_HOST_CLASS_STORAGE *storage;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-
+extern UX_HOST_CLASS_STORAGE *storage;
+extern UX_HOST_CLASS_STORAGE_MEDIA *storageMedia;
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN USER_CODE_SECTION_0 */
@@ -48,7 +58,9 @@
 VOID  fx_stm32_custom_driver(FX_MEDIA *media_ptr)
 {
   /* USER CODE BEGIN USER_CODE_SECTION_1 */
-
+  ULONG partition_start;
+  ULONG partition_size;
+    UINT status;
   /* USER CODE END USER_CODE_SECTION_1 */
 
   switch (media_ptr->fx_media_driver_request)
@@ -85,7 +97,47 @@ VOID  fx_stm32_custom_driver(FX_MEDIA *media_ptr)
     case FX_DRIVER_BOOT_READ:
     {
     /* USER CODE BEGIN DRIVER_BOOT_READ */
+    status = ux_host_class_storage_media_lock(storageMedia,UX_WAIT_FOREVER);
+    status = ux_host_class_storage_media_read(storage, 0, media_ptr->fx_media_driver_sectors, media_ptr->fx_media_driver_buffer);
+    ux_host_class_storage_media_unlock(storageMedia);
 
+      if (status != FX_SUCCESS)
+      {
+        media_ptr->fx_media_driver_status = status;
+        break;
+      }
+       /* Check if the sector 0 is the actual boot sector, otherwise calculate the offset into it.
+      Please note that this should belong to higher level of MW to do this check and it is here
+      as a temporary work solution */
+
+      partition_start =  0;
+
+      status =  _fx_partition_offset_calculate(media_ptr -> fx_media_driver_buffer, 0,
+                                               &partition_start, &partition_size);
+
+      /* Check partition read error.  */
+      if (status)
+      {
+        /* Unsuccessful driver request.  */
+        media_ptr -> fx_media_driver_status =  FX_IO_ERROR;
+        break;
+      }
+
+      /* Now determine if there is a partition...   */
+      if (partition_start)
+      {
+
+        /* Yes, now lets read the actual boot record.  */
+        status = ux_host_class_storage_media_lock(storageMedia,UX_WAIT_FOREVER);
+        status = ux_host_class_storage_media_read(storage, partition_start, media_ptr->fx_media_driver_sectors,media_ptr->fx_media_driver_buffer);
+        ux_host_class_storage_media_unlock(storageMedia);
+
+        if (status != FX_SUCCESS)
+        {
+          media_ptr->fx_media_driver_status = status;
+          break;
+        }
+      }
      /* USER CODE END DRIVER_BOOT_READ */
 
       media_ptr->fx_media_driver_status = FX_SUCCESS;
@@ -100,6 +152,13 @@ VOID  fx_stm32_custom_driver(FX_MEDIA *media_ptr)
     {
     /* USER CODE BEGIN DRIVER_READ */
 
+      status = ux_host_class_storage_media_lock(storageMedia,UX_WAIT_FOREVER);
+      status = ux_host_class_storage_media_read(storage,media_ptr->fx_media_driver_logical_sector + media_ptr->fx_media_hidden_sectors,media_ptr->fx_media_driver_sectors,media_ptr->fx_media_driver_buffer);
+      ux_host_class_storage_media_unlock(storageMedia);
+      if (status != FX_SUCCESS)
+      {
+        media_ptr->fx_media_driver_status = FX_IO_ERROR;
+      }
      /* USER CODE END DRIVER_READ */
 
       media_ptr->fx_media_driver_status = FX_SUCCESS;
@@ -113,6 +172,15 @@ VOID  fx_stm32_custom_driver(FX_MEDIA *media_ptr)
     case FX_DRIVER_BOOT_WRITE:
     {
     /* USER CODE BEGIN DRIVER_BOOT_WRITE */
+      status = ux_host_class_storage_media_lock(storageMedia,UX_WAIT_FOREVER);
+      status =  ux_host_class_storage_media_write(storage,0,media_ptr->fx_media_driver_sectors,media_ptr->fx_media_driver_buffer);
+      ux_host_class_storage_media_unlock(storageMedia);
+
+   if (status != FX_SUCCESS)
+   {
+     media_ptr->fx_media_driver_status = status;
+     break;
+   }
 
      /* USER CODE END DRIVER_BOOT_WRITE */
 
@@ -128,6 +196,13 @@ VOID  fx_stm32_custom_driver(FX_MEDIA *media_ptr)
     {
 
     /* USER CODE BEGIN DRIVER_WRITE */
+      status = ux_host_class_storage_media_lock(storageMedia,UX_WAIT_FOREVER);
+      status = ux_host_class_storage_media_write(storage,media_ptr->fx_media_driver_logical_sector + media_ptr->fx_media_hidden_sectors,media_ptr->fx_media_driver_sectors,media_ptr->fx_media_driver_buffer);
+      ux_host_class_storage_media_unlock(storageMedia);
+      if (status != FX_SUCCESS)
+      {
+        media_ptr->fx_media_driver_status = FX_IO_ERROR;
+      }
 
      /* USER CODE END DRIVER_WRITE */
 

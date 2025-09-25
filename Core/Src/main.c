@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "ux_api.h"
 #include "ux_host_class_storage.h"
+#include "ux_hcd_stm32.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,11 +51,14 @@ HCD_HandleTypeDef hhcd_USB_OTG_HS;
 UCHAR media_memory_buffer[4096] __attribute__((aligned(32)));
 
 FX_MEDIA usb_disk;
-extern UX_HOST_CLASS_STORAGE *storage = UX_NULL;
-extern UX_HOST_CLASS_STORAGE_MEDIA *storageMedia = UX_NULL;
-extern FX_MEDIA  *media;
-extern uint32_t devConnected = 0;
-extern uint32_t mediaMounted = 0;
+extern UX_HOST_CLASS_STORAGE *storage;
+extern UX_HOST_CLASS_STORAGE_MEDIA *storageMedia;
+FX_MEDIA  *media;
+extern uint32_t devConnected;
+extern uint32_t mediaMounted;
+
+uint8_t bufferRead[200];
+uint32_t readBackCnt;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

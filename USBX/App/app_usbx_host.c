@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "app_filex.h"
 
 /* USER CODE END Includes */
 
@@ -53,7 +54,7 @@ __ALIGN_BEGIN static UCHAR ux_host_byte_pool_buffer[UX_HOST_APP_MEM_POOL_SIZE] _
 /* USER CODE BEGIN PV */
 UX_HOST_CLASS_STORAGE *storage = UX_NULL;
 UX_HOST_CLASS_STORAGE_MEDIA *storageMedia = UX_NULL;
-FX_MEDIA  *media;
+extern FX_MEDIA  *media;
 volatile uint32_t devConnected = 0;
 volatile uint32_t mediaMounted = 0;
 /* USER CODE END PV */
