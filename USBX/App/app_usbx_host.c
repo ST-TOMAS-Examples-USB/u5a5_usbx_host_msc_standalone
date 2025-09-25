@@ -51,7 +51,11 @@
 #endif
 __ALIGN_BEGIN static UCHAR ux_host_byte_pool_buffer[UX_HOST_APP_MEM_POOL_SIZE] __ALIGN_END;
 /* USER CODE BEGIN PV */
-
+UX_HOST_CLASS_STORAGE *storage = UX_NULL;
+UX_HOST_CLASS_STORAGE_MEDIA *storageMedia = UX_NULL;
+FX_MEDIA  *media;
+volatile uint32_t devConnected = 0;
+volatile uint32_t mediaMounted = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -93,6 +97,15 @@ UINT MX_USBX_Host_Init(VOID)
 
   /* Register a callback error function */
   ux_utility_error_callback_register(&ux_host_error_callback);
+
+  /* Initialize the host storage class */
+  if (ux_host_stack_class_register(_ux_system_host_class_storage_name,
+                                   ux_host_class_storage_entry) != UX_SUCCESS)
+  {
+    /* USER CODE BEGIN USBX_HOST_STORAGE_REGISTER_ERROR */
+    return UX_ERROR;
+    /* USER CODE END USBX_HOST_STORAGE_REGISTER_ERROR */
+  }
 
   /* USER CODE BEGIN MX_USBX_Host_Init1 */
 
@@ -138,7 +151,7 @@ ULONG _ux_utility_time_get(VOID)
   ULONG time_tick = 0U;
 
   /* USER CODE BEGIN _ux_utility_time_get */
-
+  time_tick = HAL_GetTick();
   /* USER CODE END _ux_utility_time_get */
 
   return time_tick;
@@ -166,7 +179,19 @@ UINT ux_host_event_callback(ULONG event, UX_HOST_CLASS *current_class, VOID *cur
     case UX_DEVICE_INSERTION:
 
       /* USER CODE BEGIN UX_DEVICE_INSERTION */
+    	 if (current_class->ux_host_class_entry_function == ux_host_class_storage_entry && current_instance != UX_NULL)
+        {
+          if (storage == UX_NULL)
+          {
+            /* Get current Storage Instance */
+            storage = (UX_HOST_CLASS_STORAGE *)current_instance;
+            devConnected=1;
 
+            /* Get the storage media */
+            storageMedia = (UX_HOST_CLASS_STORAGE_MEDIA *)current_class -> ux_host_class_media;
+            storageMedia -> ux_host_class_storage_media_storage = storage;
+          }
+        }
       /* USER CODE END UX_DEVICE_INSERTION */
 
       break;
@@ -190,7 +215,12 @@ UINT ux_host_event_callback(ULONG event, UX_HOST_CLASS *current_class, VOID *cur
     case UX_DEVICE_DISCONNECTION:
 
       /* USER CODE BEGIN UX_DEVICE_DISCONNECTION */
+      devConnected = 0;
+      storage = UX_NULL;
+      storageMedia = UX_NULL;
+      mediaMounted = 0;
 
+      media = NULL;
       /* USER CODE END UX_DEVICE_DISCONNECTION */
 
       break;

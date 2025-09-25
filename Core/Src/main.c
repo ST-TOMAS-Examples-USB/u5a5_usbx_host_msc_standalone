@@ -23,7 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ux_api.h"
+#include "ux_host_class_storage.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +47,14 @@
 HCD_HandleTypeDef hhcd_USB_OTG_HS;
 
 /* USER CODE BEGIN PV */
+UCHAR media_memory_buffer[4096] __attribute__((aligned(32)));
 
+FX_MEDIA usb_disk;
+extern UX_HOST_CLASS_STORAGE *storage = UX_NULL;
+extern UX_HOST_CLASS_STORAGE_MEDIA *storageMedia = UX_NULL;
+extern FX_MEDIA  *media;
+extern uint32_t devConnected = 0;
+extern uint32_t mediaMounted = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,11 +99,14 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USB_OTG_HS_HCD_Init();
   MX_FileX_Init();
   MX_USBX_Host_Init();
   /* USER CODE BEGIN 2 */
-
+  MX_USB_OTG_HS_HCD_Init();
+  /*connect usb peripery to usbx*/
+  ux_host_stack_hcd_register(_ux_system_host_hcd_stm32_name,_ux_hcd_stm32_initialize, (ULONG)USB_OTG_HS,  (ULONG)&hhcd_USB_OTG_HS);
+  /*start usb periphery*/
+  HAL_HCD_Start(&hhcd_USB_OTG_HS);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -107,6 +118,32 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+    if (devConnected && !mediaMounted && (storageMedia != UX_NULL) && (storage->ux_host_class_storage_state == UX_HOST_CLASS_INSTANCE_LIVE))
+    {
+      UINT status;
+      status = fx_media_open(&usb_disk,
+                              "USB_DISK",
+                              fx_stm32_custom_driver,
+                              storageMedia,
+                              media_memory_buffer,
+                              sizeof(media_memory_buffer));
+      if (status == FX_SUCCESS)
+      {
+        mediaMounted = 1;
+      }
+    }
+    if (mediaMounted)
+    {
+      FX_FILE file;
+      UINT st = fx_file_open(&usb_disk, &file, "test.txt", FX_OPEN_FOR_READ);
+      if (st == FX_SUCCESS)
+      {
+        st = fx_file_read(&file,bufferRead,200,&readBackCnt);
+
+        fx_file_close(&file);
+      }
+    }
   }
   /* USER CODE END 3 */
 }

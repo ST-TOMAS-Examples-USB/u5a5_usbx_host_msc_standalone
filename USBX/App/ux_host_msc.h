@@ -1,9 +1,9 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    app_usbx_host.h
+  * @file    ux_host_msc.h
   * @author  MCD Application Team
-  * @brief   USBX Host applicative header file
+  * @brief   USBX Host MSC applicative header file
   ******************************************************************************
     * @attention
   *
@@ -18,8 +18,8 @@
   */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __APP_USBX_HOST_H__
-#define __APP_USBX_HOST_H__
+#ifndef __UX_HOST_MSC_H__
+#define __UX_HOST_MSC_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,11 +27,11 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "ux_api.h"
-#include "main.h"
-#include "ux_host_msc.h"
+#include "ux_host_class_storage.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -40,9 +40,6 @@ extern "C" {
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
-#define UX_HOST_APP_MEM_POOL_SIZE       1024*10
-#define USBX_HOST_MEMORY_STACK_SIZE     1024*9
-
 /* USER CODE BEGIN EC */
 
 /* USER CODE END EC */
@@ -53,7 +50,6 @@ extern "C" {
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
-UINT MX_USBX_Host_Init(VOID);
 
 /* USER CODE BEGIN EFP */
 
@@ -71,4 +67,4 @@ UINT MX_USBX_Host_Init(VOID);
 #ifdef __cplusplus
 }
 #endif
-#endif /* __APP_USBX_HOST_H__ */
+#endif  /* __UX_HOST_MSC_H__ */
